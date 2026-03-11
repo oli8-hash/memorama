@@ -8,9 +8,9 @@
     let primera = null, segunda = null, bloqueado = false;
     let oportunidades = 7, pares = 0, totalPares = 4;
     let tiempoRestante = 45, cronometroIniciado = false, intervalo;
- 
+
     function mezclar(array) { return array.sort(() => Math.random() - 0.5); }
- 
+
     function reproducirSonido(id) {
       const sonido = document.querySelector(id);
       if (sonido && sonido.components.sound) {
@@ -18,7 +18,7 @@
         sonido.components.sound.playSound();
       }
     }
- 
+
     function iniciarTiempo() {
       if (!cronometroIniciado) {
         cronometroIniciado = true;
@@ -30,23 +30,23 @@
           if (tiempoRestante <= 0) {
             clearInterval(intervalo);
             reproducirSonido('#snd-fail');
-            setTimeout(() => { alert('⏰ ¡TIEMPO AGOTADO!'); location.reload(); }, 500);
+            setTimeout(() => { location.reload(); }, 500); // reinicia automáticamente
           }
         }, 1000);
       }
     }
- 
+
     AFRAME.registerComponent('carta', {
       schema: { valor: { type: 'int' } },
       init: function() {
         this.volteada = false;
         this.el.addEventListener('click', () => {
           if (bloqueado || this.volteada || this.el === primera || tiempoRestante <= 0) return;
-         
+
           iniciarTiempo();
           reproducirSonido('#snd-flip');
           this.voltear();
-         
+
           if (!primera) {
             primera = this.el;
           } else {
@@ -65,23 +65,23 @@
         this.el.setAttribute('animation', { property: 'rotation', to: '0 0 0', dur: 500, easing: 'easeInBack' });
       }
     });
- 
+
     function verificar() {
       let v1 = primera.getAttribute('carta').valor;
       let v2 = segunda.getAttribute('carta').valor;
- 
+
       if (v1 === v2) {
         pares++;
         reproducirSonido('#snd-match');
-        // Efecto visual de acierto
         primera.setAttribute('animation__match', {property: 'scale', to: '1.1 1.1 1.1', dur: 200, dir: 'alternate', loop: 2});
         segunda.setAttribute('animation__match', {property: 'scale', to: '1.1 1.1 1.1', dur: 200, dir: 'alternate', loop: 2});
-       
+
         bloqueado = false; primera = null; segunda = null;
+
         if (pares === totalPares) {
           clearInterval(intervalo);
           reproducirSonido('#snd-win');
-          setTimeout(() => alert('🏆 ¡VICTORIA MAGISTRAL!'), 600);
+          setTimeout(() => { location.reload(); }, 600); // reinicia al ganar
         }
       } else {
         oportunidades--;
@@ -92,15 +92,15 @@
           segunda.components.carta.volver();
           bloqueado = false; primera = null; segunda = null;
         }, 1200);
-       
+
         if (oportunidades === 0) {
           clearInterval(intervalo);
           reproducirSonido('#snd-fail');
-          setTimeout(() => { alert('💀 GAME OVER'); location.reload(); }, 1200);
+          setTimeout(() => { location.reload(); }, 1200); // reinicia al perder
         }
       }
     }
- 
+
     window.addEventListener('load', () => {
       const escena = document.querySelector('a-scene');
       let valores = mezclar([1, 1, 2, 2, 3, 3, 4, 4]);
@@ -110,25 +110,22 @@
         const carta = document.createElement('a-entity');
         carta.setAttribute('position', `${(col - 1.5) * 1.3} ${1.8 - fila * 1.7} -3`);
         carta.setAttribute('carta', 'valor:' + valor);
- 
-        // Contenedor visual (Caja delgada para dar volumen)
+
         const cuerpo = document.createElement('a-box');
         cuerpo.setAttribute('width', '1'); cuerpo.setAttribute('height', '1.5'); cuerpo.setAttribute('depth', '0.05');
         cuerpo.setAttribute('color', '#333');
- 
-        // Trasera (Lo que ves al inicio)
+
         const back = document.createElement('a-plane');
         back.setAttribute('width', '0.9'); back.setAttribute('height', '1.4');
         back.setAttribute('position', '0 0 0.03');
         back.setAttribute('material', 'src: #backImg; roughness: 0.5');
- 
-        // Frontal (La imagen oculta)
+
         const front = document.createElement('a-plane');
         front.setAttribute('width', '0.9'); front.setAttribute('height', '1.4');
         front.setAttribute('position', '0 0 -0.03');
         front.setAttribute('rotation', '0 180 0');
         front.setAttribute('material', `src: #img${valor}; shader: standard`);
- 
+
         carta.appendChild(cuerpo);
         carta.appendChild(back);
         carta.appendChild(front);
@@ -145,30 +142,30 @@
       <img id="img2" src="eb.jpg" crossorigin="anonymous">
       <img id="img3" src="images.jpg" crossorigin="anonymous">
       <img id="img4" src="billie.jpg" crossorigin="anonymous">
-     
+
       <audio id="src-flip" src="https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3" preload="auto"></audio>
       <audio id="src-match" src="https://cdn.freesound.org/previews/270/270333_5123851-lq.mp3" preload="auto"></audio>
       <audio id="src-win" src="https://cdn.freesound.org/previews/391/391539_5123851-lq.mp3" preload="auto"></audio>
       <audio id="src-fail" src="https://cdn.freesound.org/previews/142/142608_1840739-lq.mp3" preload="auto"></audio>
     </a-assets>
- 
+
     <a-entity id="snd-flip" sound="src: #src-flip; poolSize: 5"></a-entity>
     <a-entity id="snd-match" sound="src: #src-match"></a-entity>
     <a-entity id="snd-win" sound="src: #src-win"></a-entity>
     <a-entity id="snd-fail" sound="src: #src-fail"></a-entity>
- 
+
     <a-light type="ambient" color="#BBB"></a-light>
     <a-light type="directional" color="#FFF" intensity="0.6" position="-1 1 2"></a-light>
- 
+
     <a-camera position="0 1.6 4">
       <a-cursor fuse="true" fuse-timeout="1200" color="#FFEB3B"
                 animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1200; startEvents: fusing">
       </a-cursor>
     </a-camera>
- 
+
     <a-text id="vidas" value="Vidas: 7" position="-2.5 3.5 -3" color="#FF5252" width="8" font="monoid"></a-text>
     <a-text id="timer" value="Tiempo: 45s" position="0.8 3.5 -3" color="#69F0AE" width="8" font="monoid"></a-text>
-   
+
     <a-grid static-body position="0 0 0" rotation="-90 0 0" material="opacity: 0.2; color: #FFF"></a-grid>
   </a-scene>
 </body>
