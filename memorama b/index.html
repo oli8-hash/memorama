@@ -1,172 +1,335 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Memorama VR Pro - Cielo Azul</title>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script>
-    let primera = null, segunda = null, bloqueado = false;
-    let oportunidades = 7, pares = 0, totalPares = 4;
-    let tiempoRestante = 45, cronometroIniciado = false, intervalo;
+<meta charset="utf-8">
+<title>Memorama VR Pro - Cielo Azul</title>
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 
-    function mezclar(array) { return array.sort(() => Math.random() - 0.5); }
+<script>
 
-    function reproducirSonido(id) {
-      const sonido = document.querySelector(id);
-      if (sonido && sonido.components.sound) {
-        sonido.components.sound.stopSound();
-        sonido.components.sound.playSound();
-      }
-    }
+let primera = null, segunda = null, bloqueado = false;
+let oportunidades = 7, pares = 0, totalPares = 4;
+let tiempoRestante = 45, cronometroIniciado = false, intervalo;
 
-    function iniciarTiempo() {
-      if (!cronometroIniciado) {
-        cronometroIniciado = true;
-        intervalo = setInterval(() => {
-          tiempoRestante--;
-          const timerEl = document.querySelector('#timer');
-          timerEl.setAttribute('value', 'Tiempo: ' + tiempoRestante + 's');
-          if (tiempoRestante <= 10) timerEl.setAttribute('color', '#FF5252');
-          if (tiempoRestante <= 0) {
-            clearInterval(intervalo);
-            reproducirSonido('#snd-fail');
-            setTimeout(() => { location.reload(); }, 500); // reinicia automáticamente
-          }
-        }, 1000);
-      }
-    }
+function mezclar(array){
+return array.sort(()=>Math.random()-0.5);
+}
 
-    AFRAME.registerComponent('carta', {
-      schema: { valor: { type: 'int' } },
-      init: function() {
-        this.volteada = false;
-        this.el.addEventListener('click', () => {
-          if (bloqueado || this.volteada || this.el === primera || tiempoRestante <= 0) return;
+function reproducirSonido(id){
+const sonido=document.querySelector(id);
+if(sonido && sonido.components.sound){
+sonido.components.sound.stopSound();
+sonido.components.sound.playSound();
+}
+}
 
-          iniciarTiempo();
-          reproducirSonido('#snd-flip');
-          this.voltear();
+function iniciarTiempo(){
+if(!cronometroIniciado){
 
-          if (!primera) {
-            primera = this.el;
-          } else {
-            segunda = this.el;
-            bloqueado = true;
-            verificar();
-          }
-        });
-      },
-      voltear: function() {
-        this.volteada = true;
-        this.el.setAttribute('animation', { property: 'rotation', to: '0 180 0', dur: 500, easing: 'easeOutBack' });
-      },
-      volver: function() {
-        this.volteada = false;
-        this.el.setAttribute('animation', { property: 'rotation', to: '0 0 0', dur: 500, easing: 'easeInBack' });
-      }
-    });
+cronometroIniciado=true;
 
-    function verificar() {
-      let v1 = primera.getAttribute('carta').valor;
-      let v2 = segunda.getAttribute('carta').valor;
+intervalo=setInterval(()=>{
 
-      if (v1 === v2) {
-        pares++;
-        reproducirSonido('#snd-match');
-        primera.setAttribute('animation__match', {property: 'scale', to: '1.1 1.1 1.1', dur: 200, dir: 'alternate', loop: 2});
-        segunda.setAttribute('animation__match', {property: 'scale', to: '1.1 1.1 1.1', dur: 200, dir: 'alternate', loop: 2});
+tiempoRestante--;
 
-        bloqueado = false; primera = null; segunda = null;
+const timerEl=document.querySelector('#timer');
+timerEl.setAttribute('value','Tiempo: '+tiempoRestante+'s');
 
-        if (pares === totalPares) {
-          clearInterval(intervalo);
-          reproducirSonido('#snd-win');
-          setTimeout(() => { location.reload(); }, 600); // reinicia al ganar
-        }
-      } else {
-        oportunidades--;
-        document.querySelector('#vidas').setAttribute('value', 'Vidas: ' + oportunidades);
-        setTimeout(() => {
-          reproducirSonido('#snd-flip');
-          primera.components.carta.volver();
-          segunda.components.carta.volver();
-          bloqueado = false; primera = null; segunda = null;
-        }, 1200);
+if(tiempoRestante<=10)
+timerEl.setAttribute('color','#FF5252');
 
-        if (oportunidades === 0) {
-          clearInterval(intervalo);
-          reproducirSonido('#snd-fail');
-          setTimeout(() => { location.reload(); }, 1200); // reinicia al perder
-        }
-      }
-    }
+if(tiempoRestante<=0){
 
-    window.addEventListener('load', () => {
-      const escena = document.querySelector('a-scene');
-      let valores = mezclar([1, 1, 2, 2, 3, 3, 4, 4]);
-      valores.forEach((valor, i) => {
-        const fila = Math.floor(i / 4);
-        const col = i % 4;
-        const carta = document.createElement('a-entity');
-        carta.setAttribute('position', `${(col - 1.5) * 1.3} ${1.8 - fila * 1.7} -3`);
-        carta.setAttribute('carta', 'valor:' + valor);
+clearInterval(intervalo);
+reproducirSonido('#snd-fail');
 
-        const cuerpo = document.createElement('a-box');
-        cuerpo.setAttribute('width', '1'); cuerpo.setAttribute('height', '1.5'); cuerpo.setAttribute('depth', '0.05');
-        cuerpo.setAttribute('color', '#333');
+setTimeout(()=>{
+location.reload();
+},1500);
 
-        const back = document.createElement('a-plane');
-        back.setAttribute('width', '0.9'); back.setAttribute('height', '1.4');
-        back.setAttribute('position', '0 0 0.03');
-        back.setAttribute('material', 'src: #backImg; roughness: 0.5');
+}
 
-        const front = document.createElement('a-plane');
-        front.setAttribute('width', '0.9'); front.setAttribute('height', '1.4');
-        front.setAttribute('position', '0 0 -0.03');
-        front.setAttribute('rotation', '0 180 0');
-        front.setAttribute('material', `src: #img${valor}; shader: standard`);
+},1000);
 
-        carta.appendChild(cuerpo);
-        carta.appendChild(back);
-        carta.appendChild(front);
-        escena.appendChild(carta);
-      });
-    });
-  </script>
+}
+}
+
+AFRAME.registerComponent('carta',{
+schema:{valor:{type:'int'}},
+
+init:function(){
+
+this.volteada=false;
+
+this.el.addEventListener('click',()=>{
+
+if(bloqueado || this.volteada || this.el===primera || tiempoRestante<=0)
+return;
+
+iniciarTiempo();
+
+reproducirSonido('#snd-flip');
+
+this.voltear();
+
+if(!primera){
+
+primera=this.el;
+
+}else{
+
+segunda=this.el;
+bloqueado=true;
+
+verificar();
+
+}
+
+});
+
+},
+
+voltear:function(){
+
+this.volteada=true;
+
+this.el.setAttribute('animation',{
+property:'rotation',
+to:'0 180 0',
+dur:500,
+easing:'easeOutBack'
+});
+
+},
+
+volver:function(){
+
+this.volteada=false;
+
+this.el.setAttribute('animation',{
+property:'rotation',
+to:'0 0 0',
+dur:500,
+easing:'easeInBack'
+});
+
+}
+
+});
+
+function verificar(){
+
+let v1=primera.getAttribute('carta').valor;
+let v2=segunda.getAttribute('carta').valor;
+
+if(v1===v2){
+
+pares++;
+
+reproducirSonido('#snd-match');
+
+primera.setAttribute('animation__match',{
+property:'scale',
+to:'1.1 1.1 1.1',
+dur:200,
+dir:'alternate',
+loop:2
+});
+
+segunda.setAttribute('animation__match',{
+property:'scale',
+to:'1.1 1.1 1.1',
+dur:200,
+dir:'alternate',
+loop:2
+});
+
+bloqueado=false;
+primera=null;
+segunda=null;
+
+if(pares===totalPares){
+
+clearInterval(intervalo);
+
+reproducirSonido('#snd-win');
+
+const premio=document.querySelector('#premio');
+premio.setAttribute('visible',true);
+
+setTimeout(()=>{
+location.reload();
+},6000);
+
+}
+
+}else{
+
+oportunidades--;
+
+document.querySelector('#vidas')
+.setAttribute('value','Vidas: '+oportunidades);
+
+setTimeout(()=>{
+
+reproducirSonido('#snd-flip');
+
+primera.components.carta.volver();
+segunda.components.carta.volver();
+
+bloqueado=false;
+primera=null;
+segunda=null;
+
+},1200);
+
+if(oportunidades===0){
+
+clearInterval(intervalo);
+
+reproducirSonido('#snd-fail');
+
+setTimeout(()=>{
+location.reload();
+},1500);
+
+}
+
+}
+
+}
+
+window.addEventListener('load',()=>{
+
+const escena=document.querySelector('a-scene');
+
+let valores=mezclar([1,1,2,2,3,3,4,4]);
+
+valores.forEach((valor,i)=>{
+
+const fila=Math.floor(i/4);
+const col=i%4;
+
+const carta=document.createElement('a-entity');
+
+carta.setAttribute(
+'position',
+`${(col-1.5)*1.3} ${1.8-fila*1.7} -3`
+);
+
+carta.setAttribute('carta','valor:'+valor);
+
+const cuerpo=document.createElement('a-box');
+cuerpo.setAttribute('width','1');
+cuerpo.setAttribute('height','1.5');
+cuerpo.setAttribute('depth','0.05');
+cuerpo.setAttribute('color','#333');
+
+const back=document.createElement('a-plane');
+back.setAttribute('width','0.9');
+back.setAttribute('height','1.4');
+back.setAttribute('position','0 0 0.03');
+back.setAttribute('material','src:#backImg;roughness:0.5');
+
+const front=document.createElement('a-plane');
+front.setAttribute('width','0.9');
+front.setAttribute('height','1.4');
+front.setAttribute('position','0 0 -0.03');
+front.setAttribute('rotation','0 180 0');
+front.setAttribute('material',`src:#img${valor};shader:standard`);
+
+carta.appendChild(cuerpo);
+carta.appendChild(back);
+carta.appendChild(front);
+
+escena.appendChild(carta);
+
+});
+
+});
+
+</script>
 </head>
+
 <body>
-  <a-scene background="color: black" shadow="type: pcfsoft">
-    <a-assets>
-      <img id="backImg" src="6431ebfebbbc423e9ce328a9_album1.jpg" crossorigin="anonymous">
-      <img id="img1" src="eillish.jpg" crossorigin="anonymous">
-      <img id="img2" src="eb.jpg" crossorigin="anonymous">
-      <img id="img3" src="images.jpg" crossorigin="anonymous">
-      <img id="img4" src="billie.jpg" crossorigin="anonymous">
 
-      <audio id="src-flip" src="https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3" preload="auto"></audio>
-      <audio id="src-match" src="https://cdn.freesound.org/previews/270/270333_5123851-lq.mp3" preload="auto"></audio>
-      <audio id="src-win" src="https://cdn.freesound.org/previews/391/391539_5123851-lq.mp3" preload="auto"></audio>
-      <audio id="src-fail" src="https://cdn.freesound.org/previews/142/142608_1840739-lq.mp3" preload="auto"></audio>
-    </a-assets>
+<a-scene background="color:black" shadow="type:pcfsoft">
 
-    <a-entity id="snd-flip" sound="src: #src-flip; poolSize: 5"></a-entity>
-    <a-entity id="snd-match" sound="src: #src-match"></a-entity>
-    <a-entity id="snd-win" sound="src: #src-win"></a-entity>
-    <a-entity id="snd-fail" sound="src: #src-fail"></a-entity>
+<a-assets>
 
-    <a-light type="ambient" color="#BBB"></a-light>
-    <a-light type="directional" color="#FFF" intensity="0.6" position="-1 1 2"></a-light>
+<img id="backImg" src="d5b5d317422ab95cd14a51dbbb60715f.jpg">
 
-    <a-camera position="0 1.6 4">
-      <a-cursor fuse="true" fuse-timeout="1200" color="#FFEB3B"
-                animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; dur: 1200; startEvents: fusing">
-      </a-cursor>
-    </a-camera>
+<img id="img1" src="w700_Agua_mineral.jpg">
+<img id="img2" src="luz-de-sol-en-planta-e1553651481689.jpg">
+<img id="img3" src="abono-para-plantas.jpg">
+<img id="img4" src="banner-collection-gardening-tools.jpg">
 
-    <a-text id="vidas" value="Vidas: 7" position="-2.5 3.5 -3" color="#FF5252" width="8" font="monoid"></a-text>
-    <a-text id="timer" value="Tiempo: 45s" position="0.8 3.5 -3" color="#69F0AE" width="8" font="monoid"></a-text>
+<audio id="src-flip" src="https://cdn.freesound.org/previews/240/240776_4107740-lq.mp3"></audio>
 
-    <a-grid static-body position="0 0 0" rotation="-90 0 0" material="opacity: 0.2; color: #FFF"></a-grid>
-  </a-scene>
+<audio id="src-match" src="https://cdn.freesound.org/previews/270/270333_5123851-lq.mp3"></audio>
+
+<audio id="src-win" src="https://cdn.freesound.org/previews/391/391539_5123851-lq.mp3"></audio>
+
+<audio id="src-fail" src="https://cdn.freesound.org/previews/142/142608_1840739-lq.mp3"></audio>
+
+</a-assets>
+
+<a-entity id="snd-flip" sound="src:#src-flip;poolSize:5"></a-entity>
+<a-entity id="snd-match" sound="src:#src-match"></a-entity>
+<a-entity id="snd-win" sound="src:#src-win"></a-entity>
+<a-entity id="snd-fail" sound="src:#src-fail"></a-entity>
+
+<a-light type="ambient" color="#BBB"></a-light>
+<a-light type="directional" color="#FFF" intensity="0.6" position="-1 1 2"></a-light>
+
+<a-camera position="0 1.6 4">
+
+<a-cursor
+fuse="true"
+fuse-timeout="1200"
+color="#FFEB3B"
+animation__fusing="property:scale;from:1 1 1;to:0.1 0.1 0.1;dur:1200;startEvents:fusing">
+</a-cursor>
+
+</a-camera>
+
+<a-text
+id="vidas"
+value="Vidas: 7"
+position="-2.5 3.5 -3"
+color="#FF5252"
+width="8"
+font="monoid">
+</a-text>
+
+<a-text
+id="timer"
+value="Tiempo: 45s"
+position="0.8 3.5 -3"
+color="#69F0AE"
+width="8"
+font="monoid">
+</a-text>
+
+<a-text
+id="premio"
+value="🎉 FELICIDADES 🎉\nGanaste un 10% de descuento\npara tu próxima compra"
+position="-2 1 -2.5"
+color="#FFD700"
+width="6"
+align="center"
+visible="false"
+font="monoid">
+</a-text>
+
+<a-grid
+static-body
+position="0 0 0"
+rotation="-90 0 0"
+material="opacity:0.2;color:#FFF">
+</a-grid>
+
+</a-scene>
+
 </body>
 </html>
